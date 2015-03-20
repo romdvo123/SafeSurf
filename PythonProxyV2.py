@@ -1,16 +1,19 @@
-import socket, thread, select, FireWall
+import socket, thread, select, FireWall, os
 
 
 __version__ = '0.2.0 RomanProxy'
 BUFLEN = 8192
 VERSION = 'Python Proxy/'+__version__
 HTTPVER = 'HTTP/1.1'
+#BASE_PATH = r'W:\Cyber\romanproj\SafeSurf'
+BASE_PATH = r'D:\Program Files (x86)\GitRepositories\SafeSurf'
+bl_path = os.path.join(BASE_PATH,'blacklists')
+geo_path = os.path.join(BASE_PATH,'GeoLiteCity.dat')
+img_path = os.path.join(BASE_PATH,'response_picture.jpg')
 
-bl_path = r"W:\Cyber\romanproj\SafeSurf\blacklists"
-geo_path = r'W:\Cyber\romanproj\SafeSurf\GeoLiteCity.dat'
 firewall=FireWall.FireWall(bl_path,geo_path)
 #WORKS, get new pic
-with open(r'W:\Cyber\romanproj\SafeSurf\response_picture.jpg','rb') as image:
+with open(img_path,'rb') as image:
     data = image.read()
     MSG_PIC = HTTPVER+' 200 OK\n'+'Content-Type: image/jpeg\nContent-Length: '+str(len(data))+'\n\n' + data
 
@@ -86,7 +89,7 @@ class ConnectionHandler:
                 (soc_family, _, _, _, address) = socket.getaddrinfo(host, port)[0]
                 country = firewall.location_query(address[0])
                 if country[0] == 1:
-                    _MSG_COUNTRY = MSG_COUNTRY + country[1]
+                    #_MSG_COUNTRY = MSG_COUNTRY + country[1]
                     #self.client.send(_MSG_COUNTRY)
                     self.client.send(MSG_PIC)
                     self.client.close()
