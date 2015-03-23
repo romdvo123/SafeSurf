@@ -5,8 +5,8 @@ __version__ = '0.2.0 RomanProxy'
 BUFLEN = 8192
 VERSION = 'Python Proxy/'+__version__
 HTTPVER = 'HTTP/1.1'
-#BASE_PATH = r'W:\Cyber\romanproj\SafeSurf'
-BASE_PATH = r'D:\Program Files (x86)\GitRepositories\SafeSurf'
+BASE_PATH = r'W:\Cyber\RomanRepos\SafeSurf'
+#BASE_PATH = r'D:\Program Files (x86)\GitRepositories\SafeSurf'
 bl_path = os.path.join(BASE_PATH,'blacklists')
 geo_path = os.path.join(BASE_PATH,'GeoLiteCity.dat')
 img_path = os.path.join(BASE_PATH,'response_picture.jpg')
@@ -89,9 +89,10 @@ class ConnectionHandler:
                 (soc_family, _, _, _, address) = socket.getaddrinfo(host, port)[0]
                 country = firewall.location_query(address[0])
                 if country[0] == 1:
-                    #_MSG_COUNTRY = MSG_COUNTRY + country[1]
-                    #self.client.send(_MSG_COUNTRY)
-                    self.client.send(MSG_PIC)
+                    _MSG_COUNTRY = MSG_COUNTRY + country[1]
+                    self.client.send(_MSG_COUNTRY)
+                    #send pic
+                    #self.client.send(MSG_PIC)
                     self.client.close()
                     self.target = None
                 else:
@@ -125,12 +126,13 @@ class ConnectionHandler:
             if count == time_out_max:
                 break
 
-def start_server(host='localhost', port=8081, IPv6=False, timeout=60,
+def start_server(port=8081, IPv6=False, timeout=60,
                  handler=ConnectionHandler):
     if IPv6==True:
         soc_type=socket.AF_INET6
     else:
         soc_type=socket.AF_INET
+    host = socket.gethostbyname(socket.gethostname())
     soc = socket.socket(soc_type)
     soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     soc.bind((host, port))

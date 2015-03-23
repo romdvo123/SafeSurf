@@ -2,14 +2,16 @@ import socket, os
 
 BUFLEN = 1024
 
-MSG_LOGIN_FAILED = "0,User login failed"
-MSG_LOGIN_SUCCESS = "1,User login successful"
-MSG_LOGIN_NOTRIES = "2,Exceeded login tries limit, closing connection"
-MSG_WRONG_METHOD = "3,Wrong method name, available methods: "
+MSG_LOGIN_FAILED = "0;User login failed"
+MSG_LOGIN_SUCCESS = "1;User login successful"
+MSG_LOGIN_NOTRIES = "2;Exceeded login tries limit, closing connection"
+MSG_WRONG_METHOD = "3;Wrong method name, available methods: "
 
 class ConnectionHandler:
     def __init__(self,connection,address,base_path):
+        print "Connected from: %s"%str(address)
         self.client = connection
+        self.client.send("OK")
         self.path = base_path
         self.users = os.path.join(self.path,"users")
         self.methods = ("GET","ADD")
@@ -30,7 +32,7 @@ class ConnectionHandler:
             self.handle_requests()
             
     def authentication(self):
-        username,password = self.client.recv(BUFLEN).split()
+        username,password = self.client.recv(BUFLEN).split(";")
         with open(self.users,'r') as users:
             users_list = users.split("\n")
             if [username,password] in [user_info.split()
