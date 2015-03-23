@@ -27,12 +27,12 @@ class FireWall:
         self.countries_banned = os.path.join(
             self.blacklist_countries_path,"banned")
         
-        print "loaded blacklists"
+        print "Loaded blacklists"
 
         #geolocation
         self.geolocation = pygeoip.GeoIP(geolocation_path)
         
-        print "loaded geolocation"
+        print "Loaded geolocation"
 
     def location_query(self,ip):
         data = self.geolocation.record_by_name(ip)

@@ -134,7 +134,7 @@ def start_server(host='localhost', port=8081, IPv6=False, timeout=60,
     soc = socket.socket(soc_type)
     soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     soc.bind((host, port))
-    print "Serving on %s:%d."%(host, port)#debug
+    print "Proxy server serving on %s:%d."%(host, port)#debug
     soc.listen(0)
     while 1:
         thread.start_new_thread(handler, soc.accept()+(timeout,))
