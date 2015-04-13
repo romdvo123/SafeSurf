@@ -17,7 +17,8 @@ INTERNET_SETTINGS = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
     0, winreg.KEY_ALL_ACCESS)
 
 set_key('ProxyEnable', 0)
-set_key('ProxyServer', u'10.20.30.100:8081')
+set_key('ProxyServer', u'10.20.30.100:8082')
+#set_key('ProxyServer', u'10.0.0.3:8082')
 winreg.CloseKey(INTERNET_SETTINGS)
 
 INTERNET_OPTION_REFRESH = 37

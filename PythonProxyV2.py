@@ -1,18 +1,19 @@
-import socket, thread, select, FireWall, os
+import socket, thread, select, FireWall, os, datetime
 
 
 __version__ = '0.2.0 RomanProxy'
 BUFLEN = 8192
 VERSION = 'Python Proxy/'+__version__
 HTTPVER = 'HTTP/1.1'
-BASE_PATH = r'W:\Cyber\RomanRepos\SafeSurf'
-#BASE_PATH = r'D:\Program Files (x86)\GitRepositories\SafeSurf'
+#BASE_PATH = r'W:\Cyber\RomanRepos\SafeSurf'
+BASE_PATH = r'D:\Program Files (x86)\GitRepositories\SafeSurf'
 bl_path = os.path.join(BASE_PATH,'blacklists')
 geo_path = os.path.join(BASE_PATH,'GeoLiteCity.dat')
 img_path = os.path.join(BASE_PATH,'response_picture.jpg')
+users_path = os.path.join(BASE_PATH,'users')
 
 firewall=FireWall.FireWall(bl_path,geo_path)
-#WORKS, get new pic
+
 with open(img_path,'rb') as image:
     data = image.read()
     MSG_PIC = HTTPVER+' 200 OK\n'+'Content-Type: image/jpeg\nContent-Length: '+str(len(data))+'\n\n' + data
@@ -24,6 +25,14 @@ class ConnectionHandler:
         self.client = connection
         self.client_buffer = ''
         self.timeout = timeout
+        self.directory = None
+        with open(users_path,'r') as users:
+            users_list = users.read().split('\n')
+            for user_info in users_list:
+                user_info = user_info.split(';')
+                if user_info[3] == address[0]:
+                    self.directory = os.path.join(BASE_PATH,'accounts',user_info[2])
+        
         self.method, self.path, self.protocol = self.get_request_line()
         if firewall.blacklist_expressions_query(self.path) == 1:
             self.client.send(MSG_CONTENT)
@@ -80,6 +89,7 @@ class ConnectionHandler:
             host = host[:i]
         else:
             port = 80
+        self.write_report(host)
         if firewall.blacklist_domain_query(host) == 1:
             self.client.send(MSG_CONTENT)
             self.client.close()
@@ -126,7 +136,28 @@ class ConnectionHandler:
             if count == time_out_max:
                 break
 
-def start_server(port=8081, IPv6=False, timeout=60,
+    def write_report(self,domain):
+        if self.directory == None:
+            return
+        else:
+            _today = datetime.date.today()
+            today = '%s-%s-%s'% (str(_today.day),
+                                 str(_today.month),str(_today.year))
+            report_path = os.path.join(self.directory,today + ".txt")
+            exists = False
+            #check why doesn't work
+            '''with open(report_path,'w+') as report:
+                report_list = report.read().split('\n')
+                for reported_domain in report_list:
+                    if reported_domain == domain:
+                        print "DOMAIN EXISTS" + domain
+                        exists = True
+                        break'''
+            if not exists:
+                with open(report_path,'a') as report:
+                    report.write("%s\n"%domain)
+        
+def start_server(port=8082, IPv6=False, timeout=60,
                  handler=ConnectionHandler):
     if IPv6==True:
         soc_type=socket.AF_INET6
