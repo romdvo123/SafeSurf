@@ -28,10 +28,10 @@ def signup(sock):
         print reply[1]
         if reply[0] == '4':
             signup(sock)
-        if reply[0] == '5':
+        if reply[0] == '5' or reply[0] == '6':
             sock.close()
 
-def start_connection(host="10.0.0.3",port=8082,timeout=3):
+def start_connection(host="10.20.30.150",port=8082,timeout=3):
     soc = socket.socket()
     soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     soc.connect((host,port))

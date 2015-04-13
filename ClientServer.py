@@ -8,6 +8,7 @@ MSG_LOGIN_NOTRIES = "2;Exceeded login tries limit, closing connection"
 MSG_WRONG_METHOD = "3;Wrong method name, available methods: "
 MSG_USERNAME_EXISTS = "4;Username already in use, please try a different username"
 MSG_SIGNUP_SUCCESS = "5;Signup successful! Closing connection"
+MSG_MAC_EXISTS = "6;Computer is already registered. Closing connection"
 BASE_PATH = os.getcwd()
 
 class ConnectionHandler:
@@ -38,26 +39,35 @@ class ConnectionHandler:
                 self.handle_requests()
         elif action == 'SIGNUP':
             self.signup()
+            
     def signup(self):
         signup_info = self.client.recv(BUFLEN)
-        exists = False
+        user_exists = False
+        mac_exists = False
         username,password,mac = signup_info.split(';')
         with open(self.users,'r') as users:
             users_list = users.read().split('\n')
             for user_info in users_list:
                 user_info = user_info.split(';')
-                if user_info[0] == username:
-                    exists = True
-                    break
-            if exists:
+                if len(user_info)==4:
+                    if user_info[0] == username:
+                        user_exists = True
+                        break
+                    if user_info[2] == mac:
+                        mac_exists = True
+            if user_exists:
                 self.client.send(MSG_USERNAME_EXISTS)
                 self.signup()
-        if not exists:
+            if mac_exists:
+                self.client.send(MSG_MAC_EXISTS)
+                self.client.close()
+        if not user_exists and not mac_exists:
             with open(self.users,'a') as users:
-                signup_info = signup_info + ";%s"%self.address[0]
-                users.write(signup_info + '\n')
+                signup_info = signup_info + ";%s\n"%self.address[0]
+                users.write(signup_info)
                 directory = os.path.join(BASE_PATH,"accounts",mac)
-                os.makedirs(directory)
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
                 self.client.send(MSG_SIGNUP_SUCCESS)
                 self.client.close()
             

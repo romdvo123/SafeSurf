@@ -5,8 +5,8 @@ __version__ = '0.2.0 RomanProxy'
 BUFLEN = 8192
 VERSION = 'Python Proxy/'+__version__
 HTTPVER = 'HTTP/1.1'
-#BASE_PATH = r'W:\Cyber\RomanRepos\SafeSurf'
-BASE_PATH = r'D:\Program Files (x86)\GitRepositories\SafeSurf'
+BASE_PATH = r'W:\Cyber\RomanRepos\SafeSurf'
+#BASE_PATH = r'D:\Program Files (x86)\GitRepositories\SafeSurf'
 bl_path = os.path.join(BASE_PATH,'blacklists')
 geo_path = os.path.join(BASE_PATH,'GeoLiteCity.dat')
 img_path = os.path.join(BASE_PATH,'response_picture.jpg')
@@ -30,8 +30,10 @@ class ConnectionHandler:
             users_list = users.read().split('\n')
             for user_info in users_list:
                 user_info = user_info.split(';')
-                if user_info[3] == address[0]:
-                    self.directory = os.path.join(BASE_PATH,'accounts',user_info[2])
+                if len(user_info) == 4:
+                    if user_info[3] == address[0]:
+                        self.directory = os.path.join(BASE_PATH,'accounts',user_info[2])
+                        break
         
         self.method, self.path, self.protocol = self.get_request_line()
         if firewall.blacklist_expressions_query(self.path) == 1:
@@ -143,16 +145,19 @@ class ConnectionHandler:
             _today = datetime.date.today()
             today = '%s-%s-%s'% (str(_today.day),
                                  str(_today.month),str(_today.year))
-            report_path = os.path.join(self.directory,today + ".txt")
+            report_path = os.path.join(self.directory,today)
             exists = False
             #check why doesn't work
-            '''with open(report_path,'w+') as report:
+            if not os.path.exists(report_path):
+                with open(report_path,'w+') as report:
+                    pass
+            with open(report_path,'r') as report:
                 report_list = report.read().split('\n')
                 for reported_domain in report_list:
                     if reported_domain == domain:
-                        print "DOMAIN EXISTS" + domain
+                        print "DOMAIN EXISTS " + domain
                         exists = True
-                        break'''
+                        break
             if not exists:
                 with open(report_path,'a') as report:
                     report.write("%s\n"%domain)

@@ -63,7 +63,7 @@ class Client:
     def method_GET(self,date):
         while date.split(".")<3:
             print "Wrong date syntax"
-            date = raw_input("Enter date(day.month.year): ")
+            date = raw_input("Enter date(day-month-year): ")
         self.soc.send(date)
         report = self.soc.recv(BUFLEN)
         if report == "NOT FOUND":
