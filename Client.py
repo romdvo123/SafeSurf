@@ -3,7 +3,7 @@ import socket, getpass, time, os, select
 BUFLEN = 1024
 DEFAULT_DIR = os.getcwd()
 class Client:
-    def __init__(self,host="10.20.30.110",port=8082,timeout=3):
+    def __init__(self,host="10.20.30.102",port=8082,timeout=3):
         self.soc = socket.socket()
         self.soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.soc.connect((host,port))
@@ -25,7 +25,7 @@ class Client:
         password = getpass.getpass("Enter password: ")
         login_request = username + ";" + password
         self.soc.send(login_request)
-        reply = soc.recv(BUFLEN).split(";")
+        reply = self.soc.recv(BUFLEN).split(";")
         if len(reply) != 2:
             print "Error in reply"
         else:
@@ -49,7 +49,8 @@ class Client:
         if not os.path.exists(target_path):
             os.makedirs(target_path)
         self.target_dir = target_path
-        print self.target_dir
+        print "The reports will be saved in %s"%self.target_dir
+        self.requests()
 
     def requests(self):
         method = raw_input("Enter method: ")
@@ -57,14 +58,14 @@ class Client:
             print "Wrong method"
             method = raw_input("Enter method: ")
         if method == "GET":
-            self.method_GET(raw_input("Enter date(day.month.year): "))
+            self.method_GET(raw_input("Enter date(day-month-year): "))
         #add the other methods    
     
     def method_GET(self,date):
-        while date.split(".")<3:
+        while len(date.split("-"))<3:
             print "Wrong date syntax"
             date = raw_input("Enter date(day-month-year): ")
-        self.soc.send(date)
+        self.soc.send('GET ' + date)
         report = self.soc.recv(BUFLEN)
         if report == "NOT FOUND":
             print "Report from the date %s is missing"%date

@@ -85,22 +85,29 @@ class ConnectionHandler:
     
     def handle_requests(self):
         while 1:
-            self.request = self.client.recv(BUFLEN).split()
+            self.request = self.client.recv(BUFLEN).split(' ')
+            while len(self.request)<2:
+                self.request = self.client.recv(BUFLEN).split(' ')
+            
+            print self.request
             if self.request[0] not in self.methods:
                 self.client.send(MSG_WRONG_METHOD + str(self.methods))
             else:
 
                 if self.request[0] == "GET":
-                    self.method_GET()
+                    date = self.request[1]
+                    print "Getting report from date %s"%date
+                    self.method_GET(date)
                 elif self.request[0] == "ADD":
                     self.method_ADD()
 
-    def method_GET(self):
-        date = self.request[1]
+    def method_GET(self,date):
         report = os.path.join(self.directory,date)
         if os.path.exists(report):
+            print report
             with open(report,'r') as _report:
                 report_info = _report.read()
+                print report_info
                 self.client.send(report_info)
         else:
             self.client.send("NOT FOUND")
