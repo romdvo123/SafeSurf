@@ -3,7 +3,7 @@ import socket, getpass, time, os, select
 BUFLEN = 1024
 DEFAULT_DIR = os.getcwd()
 class Client:
-    def __init__(self,host="10.20.30.102",port=8082,timeout=3):
+    def __init__(self,host="10.0.0.3",port=8082,timeout=3):
         self.soc = socket.socket()
         self.soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.soc.connect((host,port))
@@ -73,6 +73,7 @@ class Client:
             with open(os.path.join(self.target_dir,date),'w') as new_report:
                 new_report.write(report)
             print "Wrote new report in %s for the date %s"% (self.target_dir,date)
+        self.requests()
             
 if __name__ == '__main__':
     c = Client()

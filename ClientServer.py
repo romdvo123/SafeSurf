@@ -65,7 +65,7 @@ class ConnectionHandler:
             with open(self.users,'a') as users:
                 signup_info = signup_info + ";%s\n"%self.address[0]
                 users.write(signup_info)
-                directory = os.path.join(BASE_PATH,"accounts",mac)
+                directory = os.path.join(BASE_PATH,'accounts',mac)
                 if not os.path.exists(directory):
                     os.makedirs(directory)
                 self.client.send(MSG_SIGNUP_SUCCESS)
@@ -79,7 +79,9 @@ class ConnectionHandler:
                 user_info = user_info.split(';')
                 if user_info[0] == username and user_info[1]== password:
                     self.user = user_info[2]
-                    self.directory = os.path.join(BASE_PATH,self.user)
+                    self.directory = os.path.join(BASE_PATH,'accounts',self.user)
+                    print "Login successful from user %s with directory %s"%(self.user,
+                                                                             self.directory)
                     return 1
         return 0
     
@@ -103,6 +105,7 @@ class ConnectionHandler:
 
     def method_GET(self,date):
         report = os.path.join(self.directory,date)
+        print "Report path is %s"%report
         if os.path.exists(report):
             print report
             with open(report,'r') as _report:
@@ -111,6 +114,7 @@ class ConnectionHandler:
                 self.client.send(report_info)
         else:
             self.client.send("NOT FOUND")
+            self.handle_requests()
             
 def start_server(port=8082,handler=ConnectionHandler):
     soc = socket.socket(socket.AF_INET)
