@@ -87,21 +87,22 @@ class ConnectionHandler:
     
     def handle_requests(self):
         while 1:
-            self.request = self.client.recv(BUFLEN).split(' ')
+            self.request = self.client.recv(BUFLEN).split(';')
             while len(self.request)<2:
-                self.request = self.client.recv(BUFLEN).split(' ')
+                self.request = self.client.recv(BUFLEN).split(';')
             
             print self.request
             if self.request[0] not in self.methods:
                 self.client.send(MSG_WRONG_METHOD + str(self.methods))
             else:
-
-                if self.request[0] == "GET":
+                if self.request[0] == 'GET':
                     date = self.request[1]
                     print "Getting report from date %s"%date
                     self.method_GET(date)
-                elif self.request[0] == "ADD":
-                    self.method_ADD()
+                elif self.request[0] == 'ADD':
+                    blacklist,sub_blacklist,ban = self.request[1:]
+                    print "Adding %s to %s in blacklist %s"%(ban,sub_blacklist,blacklist)
+                    self.method_ADD(blacklist,sub_blacklist,ban)
 
     def method_GET(self,date):
         report = os.path.join(self.directory,date)
@@ -115,7 +116,13 @@ class ConnectionHandler:
         else:
             self.client.send("NOT FOUND")
             self.handle_requests()
-            
+
+    def method_ADD(self,blacklist,sub_blacklist,ban):
+        with open(os.path.join(BASE_PATH,'blacklists',blacklist,sub_blacklist),'a') as add_to:
+            add_to.write(ban)
+        self.client.send("SUCCESS")
+        self.handle_requests()
+        
 def start_server(port=8082,handler=ConnectionHandler):
     soc = socket.socket(socket.AF_INET)
     soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

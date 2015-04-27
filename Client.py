@@ -2,13 +2,17 @@ import socket, getpass, time, os, select
 
 BUFLEN = 1024
 DEFAULT_DIR = os.getcwd()
+
 class Client:
-    def __init__(self,host="10.0.0.3",port=8082,timeout=3):
+    def __init__(self,host="10.20.30.150",port=8082,timeout=3):
         self.soc = socket.socket()
         self.soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.soc.connect((host,port))
         reply = ''
-        self.methods = ("GET","ADD","REMOVE")
+        self.methods = ('GET','ADD','REMOVE')
+        self.blacklists = (('porn','domains','expressions','urls'),
+                           ('ecommerce','domains','urls'),
+                           ('countries','banned'))
         ready = select.select([self.soc], [], [], timeout)
         if ready[0]:
             reply = self.soc.recv(BUFLEN)
@@ -35,7 +39,7 @@ class Client:
             if reply[0] == "2":
                 self.soc.close()
             if reply[0] == "1":
-                self.directory()
+                self.requests()
 
     def directory(self):
         self.target_dir = raw_input("Enter directory(press enter for default): ")
@@ -50,22 +54,25 @@ class Client:
             os.makedirs(target_path)
         self.target_dir = target_path
         print "The reports will be saved in %s"%self.target_dir
-        self.requests()
 
     def requests(self):
         method = raw_input("Enter method: ")
         while method not in self.methods:
             print "Wrong method"
-            method = raw_input("Enter method: ")
-        if method == "GET":
+            method = raw_input("Enter method%s: ")%str(self.methods)
+        if method == 'GET':
+            self.directory()
             self.method_GET(raw_input("Enter date(day-month-year): "))
+        if method == 'ADD':
+            self.method_ADD(raw_input("Enter blacklist%s: "%str([blacklist[0] for blacklist in self.blacklists])))
+            
         #add the other methods    
     
     def method_GET(self,date):
         while len(date.split("-"))<3:
             print "Wrong date syntax"
             date = raw_input("Enter date(day-month-year): ")
-        self.soc.send('GET ' + date)
+        self.soc.send('GET;' + date)
         report = self.soc.recv(BUFLEN)
         if report == "NOT FOUND":
             print "Report from the date %s is missing"%date
@@ -74,6 +81,26 @@ class Client:
                 new_report.write(report)
             print "Wrote new report in %s for the date %s"% (self.target_dir,date)
         self.requests()
-            
+
+    def method_ADD(self,blacklist):
+        exists = False
+        while not exists:
+            for _blacklist in self.blacklists:
+                if _blacklist[0] == blacklist:
+                    exists = True
+                    bl =_blacklist[1:]
+                    break
+            if exists:
+                break
+        sub_blacklist = raw_input("Enter sub-blacklist%s: "%str([sub_bl for sub_bl in bl]))
+        while sub_blacklist not in bl:
+            sub_blacklist = raw_input("Enter sub-blacklist%s: "%str([sub_bl for sub_bl in bl]))
+        ban = raw_input("Enter parameter to ban: ")
+        self.soc.send('ADD;' + blacklist + ';' + sub_blacklist + ';' + ban)
+        response = self.soc.recv(BUFLEN)
+        if response == "SUCCESS":
+            print "Successfuly added %s to %s in blacklist %s"%(ban,sub_blacklist,blacklist)
+        self.requests()
+        
 if __name__ == '__main__':
     c = Client()
