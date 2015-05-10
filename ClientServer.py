@@ -1,6 +1,6 @@
 import socket, os, thread
 
-BUFLEN = 1024
+BUFLEN = 8192
 
 MSG_LOGIN_FAILED = "0;User login failed"
 MSG_LOGIN_SUCCESS = "1;User login successful"
@@ -68,6 +68,7 @@ class ConnectionHandler:
                 directory = os.path.join(BASE_PATH,'accounts',mac)
                 if not os.path.exists(directory):
                     os.makedirs(directory)
+                    os.makedirs(os.path.join(directory,'blacklists'))
                 self.client.send(MSG_SIGNUP_SUCCESS)
                 self.client.close()
             
@@ -103,12 +104,15 @@ class ConnectionHandler:
                     blacklist,sub_blacklist,ban = self.request[1:]
                     print "Adding %s to %s in blacklist %s"%(ban,sub_blacklist,blacklist)
                     self.method_ADD(blacklist,sub_blacklist,ban)
+                elif self.request[0] == 'REMOVE':
+                    blacklist,sub_blacklist,remove = self.request[1:]
+                    print "Removing %s from %s in blacklist %s"%(remove,sub_blacklist,blacklist)
+                    self.method_REMOVE(blacklist,sub_blacklist,remove)
 
     def method_GET(self,date):
         report = os.path.join(self.directory,date)
         print "Report path is %s"%report
         if os.path.exists(report):
-            print report
             with open(report,'r') as _report:
                 report_info = _report.read()
                 print report_info
@@ -116,14 +120,76 @@ class ConnectionHandler:
         else:
             self.client.send("NOT FOUND")
             self.handle_requests()
-
+            
     def method_ADD(self,blacklist,sub_blacklist,ban):
-        with open(os.path.join(BASE_PATH,'blacklists',blacklist,sub_blacklist),'a') as add_to:
-            add_to.write(ban)
+        directory = os.path.join(self.directory,'blacklists',blacklist)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        private_blacklist = []
+        with open(os.path.join(directory,sub_blacklist),'a+') as add_to:
+            private_blacklist = add_to.read().split('\n')
+        with open(os.path.join(directory,sub_blacklist),'w') as add_to:
+            added = False
+            skip = False
+            for parameter in private_blacklist:
+                if not skip:
+                    parameter_split = parameter.split(';')
+                    if len(parameter_split)>1:
+                        if parameter_split[1] == ban:
+                            add_to.write(ban + '\n')
+                            added = True
+                            skip = True
+                    else:
+                        if parameter == ban:
+                            add_to.write(parameter + '\n')
+                            added = True
+                            skip = True
+                    if not added:
+                        if parameter != '':
+                            add_to.write(parameter + '\n')
+                else:
+                    if parameter != '':
+                        add_to.write(parameter + '\n')
+            if not added:
+                add_to.write(ban + '\n')
+        self.client.send("SUCCESS")
+        self.handle_requests()
+
+    def method_REMOVE(self,blacklist,sub_blacklist,remove):
+        directory = os.path.join(self.directory,'blacklists',blacklist)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        private_blacklist = []
+        with open(os.path.join(directory,sub_blacklist),'a+') as remove_from:
+            private_blacklist = remove_from.read().split('\n')
+        with open(os.path.join(directory,sub_blacklist),'w') as remove_from:
+            removed = False
+            skip = False
+            for parameter in private_blacklist:
+                if not skip:
+                    parameter_split = parameter.split(';')
+                    if len(parameter_split)>1:
+                        if parameter_split[1] == remove:
+                            remove_from.write(parameter + '\n')
+                            removed = True
+                            skip = True
+                    else:
+                        if parameter == remove:
+                            remove_from.write('ALLOW;' + remove + '\n')
+                            removed = True
+                            skip = True
+                    if not removed:
+                        if parameter != '':
+                            remove_from.write(parameter + '\n')
+                else:
+                    if parameter != '':
+                        remove_from.write(parameter + '\n')
+            if not removed:
+                remove_from.write('ALLOW;' + remove + '\n')
         self.client.send("SUCCESS")
         self.handle_requests()
         
-def start_server(port=8082,handler=ConnectionHandler):
+def start_server(port=8081,handler=ConnectionHandler):
     soc = socket.socket(socket.AF_INET)
     soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     host = socket.gethostbyname(socket.gethostname())

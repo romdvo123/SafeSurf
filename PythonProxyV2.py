@@ -5,8 +5,8 @@ __version__ = '0.2.0 RomanProxy'
 BUFLEN = 8192
 VERSION = 'Python Proxy/'+__version__
 HTTPVER = 'HTTP/1.1'
-BASE_PATH = r'W:\Cyber\RomanRepos\SafeSurf'
-#BASE_PATH = r'D:\Program Files (x86)\GitRepositories\SafeSurf'
+#BASE_PATH = r'W:\Cyber\RomanRepos\SafeSurf'
+BASE_PATH = r'D:\Program Files (x86)\GitRepositories\SafeSurf'
 bl_path = os.path.join(BASE_PATH,'blacklists')
 geo_path = os.path.join(BASE_PATH,'GeoLiteCity.dat')
 img_path = os.path.join(BASE_PATH,'response_picture.jpg')
@@ -26,17 +26,19 @@ class ConnectionHandler:
         self.client_buffer = ''
         self.timeout = timeout
         self.directory = None
+        self.user = None
         with open(users_path,'r') as users:
             users_list = users.read().split('\n')
             for user_info in users_list:
                 user_info = user_info.split(';')
                 if len(user_info) == 4:
                     if user_info[3] == address[0]:
-                        self.directory = os.path.join(BASE_PATH,'accounts',user_info[2])
+                        self.user = user_info[2]
+                        self.directory = os.path.join(BASE_PATH,'accounts',self.user)
                         break
         
         self.method, self.path, self.protocol = self.get_request_line()
-        if firewall.blacklist_expressions_query(self.path) == 1:
+        if firewall.blacklist_expressions_query(self.path,self.user) == 1:
             self.client.send(MSG_CONTENT)
             self.client.close()
         else:
@@ -70,9 +72,10 @@ class ConnectionHandler:
 
     def method_others(self):
         self.path = self.path[7:]
-        if firewall.blacklist_url_query(self.path) == 1:
+        if firewall.blacklist_url_query(self.path,self.user) == 1:
             self.client.send(MSG_CONTENT)
             self.client.close()
+            self.target = None
         else:
             i = self.path.find('/')
             host = self.path[:i]        
@@ -92,14 +95,14 @@ class ConnectionHandler:
         else:
             port = 80
         self.write_report(host)
-        if firewall.blacklist_domain_query(host) == 1:
+        if firewall.blacklist_domain_query(host,self.user) == 1:
             self.client.send(MSG_CONTENT)
             self.client.close()
             self.target = None
         else:
             try:
                 (soc_family, _, _, _, address) = socket.getaddrinfo(host, port)[0]
-                country = firewall.location_query(address[0])
+                country = firewall.location_query(address[0],self.user)
                 if country[0] == 1:
                     _MSG_COUNTRY = MSG_COUNTRY + country[1]
                     self.client.send(_MSG_COUNTRY)
@@ -147,7 +150,6 @@ class ConnectionHandler:
                                  str(_today.month),str(_today.year))
             report_path = os.path.join(self.directory,today)
             exists = False
-            #check why doesn't work
             if not os.path.exists(report_path):
                 with open(report_path,'w+') as report:
                     pass
@@ -155,7 +157,6 @@ class ConnectionHandler:
                 report_list = report.read().split('\n')
                 for reported_domain in report_list:
                     if reported_domain == domain:
-                        print "DOMAIN EXISTS " + domain
                         exists = True
                         break
             if not exists:
