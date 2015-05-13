@@ -39,7 +39,7 @@ class ConnectionHandler:
                 self.handle_requests()
         elif action == 'SIGNUP':
             self.signup()
-            
+
     def signup(self):
         signup_info = self.client.recv(BUFLEN)
         user_exists = False

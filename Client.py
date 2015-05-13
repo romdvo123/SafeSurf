@@ -1,4 +1,4 @@
-import socket, getpass, time, os, select, time
+import socket, getpass, time, os, select, time, GUI
 
 BUFLEN = 8192
 DEFAULT_DIR = os.getcwd()
@@ -19,21 +19,7 @@ class Client:
             self.blacklists = (('porn','domains','expressions','urls'),
                                ('ecommerce','domains','urls'),
                                ('countries','banned'))
-            '''start_time = time.time()
-            ready = select.select([self.soc], [], [], timeout)
-            if ready[0]:
-                reply = self.soc.recv(BUFLEN)
-            if not reply:
-                _timeout = timeout-(time.time()-start_time)
-                if _timeout >= 0:
-                    print "Timeout, closing connection"
-                    print _timeout
-                    self.soc.close()
-                #else:
-            else:
-                print reply
-                self.soc.send('LOGIN')
-                self.login()'''
+            GUI.main(self.blacklists)
             while 1:
                 reply += self.soc.recv(BUFLEN)
                 end = reply.find('OK')
