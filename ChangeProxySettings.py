@@ -16,14 +16,14 @@ def set_key(name, value):
         elif name == 'ProxyServer':
             reg_type = winreg.REG_SZ        
     winreg.SetValueEx(INTERNET_SETTINGS, name, 0, reg_type, value)
-enabled = 0
+enabled = 1
 if enabled:
     print "Proxy enabled"
 else:
     print "Proxy disabled"
 while 1:
     set_key('ProxyEnable', enabled)
-    set_key('ProxyServer', u'10.0.0.3:8082')
+    set_key('ProxyServer', u'10.20.30.112:8082')
     winreg.CloseKey(INTERNET_SETTINGS)
     internet_set_option(0, INTERNET_OPTION_REFRESH, 0, 0)
     internet_set_option(0, INTERNET_OPTION_SETTINGS_CHANGED, 0, 0)

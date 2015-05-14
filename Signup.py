@@ -31,18 +31,23 @@ def signup(sock):
         if reply[0] == '5' or reply[0] == '6':
             sock.close()
 
-def start_connection(host="10.0.0.3",port=8082,timeout=3):
+def start_connection(host="10.20.30.112",port=8081,timeout=3):
     soc = socket.socket()
     soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    soc.connect((host,port))
-    reply = ''
-    ready = select.select([soc], [], [], timeout)
-    if ready[0]:
-        reply = soc.recv(BUFLEN)
-    if not reply:
-        print "Timeout, closing connection"
-        soc.close()
-    else:
+    failed = False
+    try:
+        soc.connect((host,port))
+    except:
+        print "Could not connect to server, try to restart the program"
+        failed = True
+    if not failed:
+        reply = ''
+        ready = select.select([soc], [], [], timeout)
+        while 1:
+            reply += soc.recv(BUFLEN)
+            end = reply.find('OK')
+            if end != -1:
+                break
         print reply
         soc.send('SIGNUP')
         signup(soc)

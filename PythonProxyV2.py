@@ -5,8 +5,8 @@ __version__ = '0.2.0 RomanProxy'
 BUFLEN = 8192
 VERSION = 'Python Proxy/'+__version__
 HTTPVER = 'HTTP/1.1'
-#BASE_PATH = r'W:\Cyber\RomanRepos\SafeSurf'
-BASE_PATH = r'D:\Program Files (x86)\GitRepositories\SafeSurf'
+BASE_PATH = r'W:\Cyber\RomanRepos\SafeSurf'
+#BASE_PATH = r'D:\Program Files (x86)\GitRepositories\SafeSurf'
 bl_path = os.path.join(BASE_PATH,'blacklists')
 geo_path = os.path.join(BASE_PATH,'GeoLiteCity.dat')
 img_path = os.path.join(BASE_PATH,'response_picture.jpg')
@@ -38,7 +38,9 @@ class ConnectionHandler:
                         break
         
         self.method, self.path, self.protocol = self.get_request_line()
+        self.write_value = self.path
         if firewall.blacklist_expressions_query(self.path,self.user) == 1:
+            self.write_report('BANNED;'+self.path)
             self.client.send(MSG_CONTENT)
             self.client.close()
         else:
@@ -73,6 +75,7 @@ class ConnectionHandler:
     def method_others(self):
         self.path = self.path[7:]
         if firewall.blacklist_url_query(self.path,self.user) == 1:
+            self.write_report('BANNED;'+self.write_value)
             self.client.send(MSG_CONTENT)
             self.client.close()
             self.target = None
@@ -94,8 +97,9 @@ class ConnectionHandler:
             host = host[:i]
         else:
             port = 80
-        self.write_report(host)
+        self.host=host
         if firewall.blacklist_domain_query(host,self.user) == 1:
+            self.write_report('BANNED;'+self.write_value)
             self.client.send(MSG_CONTENT)
             self.client.close()
             self.target = None
@@ -104,6 +108,7 @@ class ConnectionHandler:
                 (soc_family, _, _, _, address) = socket.getaddrinfo(host, port)[0]
                 country = firewall.location_query(address[0],self.user)
                 if country[0] == 1:
+                    self.write_report('BANNED;'+self.write_value)
                     _MSG_COUNTRY = MSG_COUNTRY + country[1]
                     self.client.send(_MSG_COUNTRY)
                     #send pic
@@ -120,6 +125,7 @@ class ConnectionHandler:
         
 
     def _read_write(self):
+        self.write_report(self.write_value)
         time_out_max = self.timeout/3
         socs = [self.client, self.target]
         count = 0

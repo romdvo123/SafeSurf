@@ -1,4 +1,4 @@
-import socket, getpass, time, os, select, time, GUI
+import socket, getpass, time, os, select, time
 
 BUFLEN = 8192
 DEFAULT_DIR = os.getcwd()
@@ -19,7 +19,6 @@ class Client:
             self.blacklists = (('porn','domains','expressions','urls'),
                                ('ecommerce','domains','urls'),
                                ('countries','banned'))
-            GUI.main(self.blacklists)
             while 1:
                 reply += self.soc.recv(BUFLEN)
                 end = reply.find('OK')
@@ -29,8 +28,8 @@ class Client:
             self.soc.send('LOGIN')
             self.login()
     def login(self):
-        username = raw_input("Enter username: ")
-        password = getpass.getpass("Enter password: ")
+        '''username = raw_input("Enter username: ")
+        password = getpass.getpass("Enter password: ")'''
         login_request = username + ";" + password
         self.soc.send(login_request)
         reply = self.soc.recv(BUFLEN).split(";")

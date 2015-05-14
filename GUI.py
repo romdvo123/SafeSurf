@@ -1,10 +1,10 @@
 from Tkinter import *
 from ttk import *
-import time
+import time, Client
 class GUI(Frame):
   
-    def __init__(self, parent,blacklists):
-        self.blacklists = blacklists
+    def __init__(self, parent,client):
+        self.blacklists = client.blacklists
         self.parent = parent
         self.parent.title("SafeSurf")
         self.initStyle()
@@ -30,13 +30,16 @@ class GUI(Frame):
         buttons_frame = Frame(self,style = 'BTN.TFrame')
         buttons_frame.place(relheight=1,relx=0,rely=0,relwidth=0.35)
         self.GET_button = Button(buttons_frame,text="Get report",
-                                 command=lambda: self.callback('GET'))
+                                 command=lambda: self.callback('GET'),
+                                 state=DISABLED)
         self.GET_button.pack(side=TOP,fill=X,padx=10,pady=10)
         self.ADD_button = Button(buttons_frame,text="Add block parameter",
-                                 command=lambda: self.callback('ADD'))
+                                 command=lambda: self.callback('ADD'),
+                                 state=DISABLED)
         self.ADD_button.pack(side=TOP,fill=X,padx=10,pady=10)
         self.REMOVE_button = Button(buttons_frame,text="Remove block parameter",
-                                    command=lambda: self.callback('REMOVE'))
+                                    command=lambda: self.callback('REMOVE'),
+                                    state=DISABLED)
         self.REMOVE_button.pack(side=TOP,fill=X,padx=10,pady=10)
         self.logo_label = Label(buttons_frame,text="""Safe\nSurf""",
                                 font=("Arial", 30),style='BTNLOGO.TLabel')
@@ -44,7 +47,7 @@ class GUI(Frame):
 
     def output_menu(self):
         self.text_label=Label(self,font=("Arial", 12),
-                         text="Please choose a method from the menu on the left.",
+                         text="Enter username and password.",
                          style='O.TLabel')
         self.text_label.place(relx=0.35,relwidth=0.65,relheight = 0.3)
     def input_menu(self):
@@ -62,8 +65,20 @@ class GUI(Frame):
         self.input_subblacklist['menu'] = self.subblacklist_menu
         #input_blacklist.place(rely=0.1,relx=0.1)
         #input_subblacklist.place(rely=0.1,relx=0.5)
-        input_entry = Entry(input_frame,text="Choose method first.")
+        self.input_entry = Entry(input_frame)
         #input_entry.place(rely=0.8,relx=0.3)
+        user_label = Label(input_frame,text="Username: ",font=("Arial", 12),style='LOGIN.TLabel')
+        user_label.place(rely=0.2,relx=0.15,relwidth=0.265)
+        self.user_entry = Entry(input_frame)
+        self.user_entry.place(rely=0.2,relx=0.415)
+        pass_label = Label(input_frame,text="Password:  ",font=("Arial", 12),style='LOGIN.TLabel')
+        pass_label.place(rely=0.4,relx=0.15)
+        self.pass_entry = Entry(input_frame, show="*")
+        self.pass_entry.place(rely=0.4,relx=0.415)
+        self.login_button = Button(input_frame,text="Login",
+                                   command=lambda: self.callback('LOGIN'))
+        self.login_button.place(rely=0.6,relx=0.35)
+                                
 
     def initStyle(self):
         self.style = Style()
@@ -75,6 +90,7 @@ class GUI(Frame):
         self.style.configure('O.TLabel',foreground='black',background='lightblue',
                              anchor=CENTER,wraplength=300,justify=CENTER,relief=GROOVE)
         self.style.configure('I.TMenubutton',foreground='black',padding=10,relief=RAISED)
+        self.style.configure('LOGIN.TLabel',foreground='black',relief=RAISED)
                          
     def callback(self,method):
         if method == 'GET':
@@ -83,6 +99,8 @@ class GUI(Frame):
             self.change_parameters('ADD')
         elif method == 'REMOVE':
             self.change_parameters('REMOVE')
+        elif method == 'LOGIN':
+            pass
 
     def change_parameters(self,method):
         if method == 'ADD':
@@ -95,10 +113,12 @@ class GUI(Frame):
         #self.input_subblacklist.place(rely=0.1,relx=0.5)   
 
 def main(blacklists):
-  
+    client = Client()
     root = Tk()
-    app = GUI(root,blacklists)
+    root.resizable(width=FALSE, height=FALSE)
+    app = GUI(root,blacklists,client)
     root.mainloop()  
 
 if __name__ == "__main__":
-    main()  
+    main((('list1','sub11','sub12'),
+          ('list2','sub21','sub22','sub23')))  
