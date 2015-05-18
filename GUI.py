@@ -1,15 +1,26 @@
 from Tkinter import *
 from ttk import *
-import time, Client
+import tkMessageBox
+import time, ClientBase
+from tkFileDialog import askdirectory
 class GUI(Frame):
   
     def __init__(self, parent,client):
-        self.blacklists = client.blacklists
-        self.parent = parent
-        self.parent.title("SafeSurf")
-        self.initStyle()
-        self.themes = self.style.theme_names()
-        self.initUI()
+        failed = False
+        try:
+            self.blacklists = client.blacklists
+        except:
+            if tkMessageBox.showerror("Connection Error",
+                                   "Could not connect to server"):
+                parent.destroy()
+            failed = True
+        if not failed:
+            self.client = client
+            self.parent = parent
+            self.parent.title("SafeSurf")
+            self.initStyle()
+            self.themes = self.style.theme_names()
+            self.initUI()
         
     def initUI(self):
         Frame.__init__(self,self.parent,style = 'BG.TFrame')
@@ -51,35 +62,42 @@ class GUI(Frame):
                          style='O.TLabel')
         self.text_label.place(relx=0.35,relwidth=0.65,relheight = 0.3)
     def input_menu(self):
-        input_frame = Frame(self,style='I.TFrame')
-        input_frame.place(relheight=0.7,relx=0.35,rely=0.3,relwidth=0.65)
-        input_directory = Menubutton(input_frame,style='I.TMenubutton',text="Choose directory:")
+        self.input_frame = Frame(self,style='I.TFrame')     
+        self.input_frame.place(relheight=0.7,relx=0.35,rely=0.3,relwidth=0.65)
+        input_directory = Menubutton(self.input_frame,style='I.TMenubutton',text="Choose directory:")
         #input_directory.place(rely=0.1,relx=0.3)
-        self.input_blacklist=Menubutton(input_frame,style='I.TMenubutton',text="Choose blacklist:")
+        self.input_blacklist=Menubutton(self.input_frame,style='I.TMenubutton',text="Choose blacklist:")
         self.blacklist_menu = Menu(self.input_blacklist,tearoff=0)
         self.input_blacklist['menu'] = self.blacklist_menu
         for blacklist in self.blacklists:
             self.blacklist_menu.add_command( label=blacklist[0])
-        self.input_subblacklist=Menubutton(input_frame,style='I.TMenubutton',text="Choose sub-blacklist:")
+        self.input_subblacklist=Menubutton(self.input_frame,style='I.TMenubutton',text="Choose sub-blacklist:")
         self.subblacklist_menu = Menu(self.input_subblacklist,tearoff=0)
         self.input_subblacklist['menu'] = self.subblacklist_menu
         #input_blacklist.place(rely=0.1,relx=0.1)
         #input_subblacklist.place(rely=0.1,relx=0.5)
-        self.input_entry = Entry(input_frame)
+        self.input = StringVar()
+        self.input_entry = Entry(self.input_frame,textvariable=self.input)
         #input_entry.place(rely=0.8,relx=0.3)
-        user_label = Label(input_frame,text="Username: ",font=("Arial", 12),style='LOGIN.TLabel')
-        user_label.place(rely=0.2,relx=0.15,relwidth=0.265)
-        self.user_entry = Entry(input_frame)
+        self.username = StringVar()
+        self.password = StringVar()
+        self.user_label = Label(self.input_frame,text="Username: ",font=("Arial", 12),style='LOGIN.TLabel')
+        self.user_label.place(rely=0.2,relx=0.15,relwidth=0.265)
+        self.user_entry = Entry(self.input_frame,textvariable=self.username)
         self.user_entry.place(rely=0.2,relx=0.415)
-        pass_label = Label(input_frame,text="Password:  ",font=("Arial", 12),style='LOGIN.TLabel')
-        pass_label.place(rely=0.4,relx=0.15)
-        self.pass_entry = Entry(input_frame, show="*")
+        self.pass_label = Label(self.input_frame,text="Password:  ",font=("Arial", 12),style='LOGIN.TLabel')
+        self.pass_label.place(rely=0.4,relx=0.15)
+        self.pass_entry = Entry(self.input_frame, show="*",textvariable=self.password)
         self.pass_entry.place(rely=0.4,relx=0.415)
-        self.login_button = Button(input_frame,text="Login",
+        self.login_button = Button(self.input_frame,text="Login",
                                    command=lambda: self.callback('LOGIN'))
         self.login_button.place(rely=0.6,relx=0.35)
+        self.date_label = Label(self.input_frame,text="Date(day-month-year): ",style='LOGIN.TLabel')
+        self.date_button = Button(self.input_frame,text="Enter",
+                                   command=lambda: self.callback('DATE'))
+        self.user_entry.focus_set()
+        self.got_directory = False
                                 
-
     def initStyle(self):
         self.style = Style()
         self.style.theme_use('xpnative')
@@ -100,7 +118,41 @@ class GUI(Frame):
         elif method == 'REMOVE':
             self.change_parameters('REMOVE')
         elif method == 'LOGIN':
-            pass
+            success = self.client.login(self.username.get(),self.password.get())
+            if success == 'OK':
+                self.GET_button['state'] = NORMAL
+                self.ADD_button['state'] = NORMAL
+                self.REMOVE_button['state'] = NORMAL
+                self.login_button.place_forget()
+                self.pass_entry.place_forget()
+                self.pass_label.place_forget()
+                self.user_entry.place_forget()
+                self.user_label.place_forget()
+                self.text_label['text'] = "Choose a method from the left"
+            elif success == 'CLOSE':
+                if tkMessageBox.showwarning("Login Failed",
+                                         "Exceeded login tries limit, closing connection"):
+                    self.parent.destroy()    
+                
+            else:
+                tkMessageBox.showwarning("Login Failed",
+                                       success)
+                self.user_entry.delete(0, 'end')
+                self.pass_entry.delete(0, 'end')
+                self.user_entry.focus_set()
+        elif method == 'DATE':
+            date = self.input.get()
+            success = self.client.method_GET(date)
+            if success == 'NOT FOUND':
+                tkMessageBox.showwarning("Not Found","Could not find report from the date %s"%date)
+                self.GET()
+            elif success == 'SYNTAX':
+                tkMessageBox.showerror("Syntax Error","Syntax error in date, type a new date(day-month-year)")
+                self.input_entry.delete(0, 'end')
+                self.GET()
+            else:
+                tkMessageBox.showinfo("Success",success)
+
 
     def change_parameters(self,method):
         if method == 'ADD':
@@ -112,13 +164,25 @@ class GUI(Frame):
         self.input_blacklist.place(rely=0.1,relx=0.1)        
         #self.input_subblacklist.place(rely=0.1,relx=0.5)   
 
-def main(blacklists):
-    client = Client()
+    def GET(self):
+        if not self.got_directory:
+            self.text_label['text'] = "Choose directory to save report"
+            path = askdirectory(parent=self.input_frame,title="Choose directory to save report: ",mustexist=1)
+            path = path.replace('/','\\')
+            self.client.directory(path)
+            self.got_directory = True
+        self.text_label['text'] = "Type the date of the report you wish to get(day-month-year)"
+        self.date_label.place(rely=0.4,relx=0.1,height=20)
+        self.input_entry.place(rely=0.39,relx=0.4957)
+        self.input_entry.focus_set()
+        self.date_button.place(rely=0.6,relx=0.35)
+        
+def main():
+    client = ClientBase.Client()
     root = Tk()
     root.resizable(width=FALSE, height=FALSE)
-    app = GUI(root,blacklists,client)
+    app = GUI(root,client)
     root.mainloop()  
 
 if __name__ == "__main__":
-    main((('list1','sub11','sub12'),
-          ('list2','sub21','sub22','sub23')))  
+    main()  

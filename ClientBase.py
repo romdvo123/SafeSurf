@@ -26,10 +26,9 @@ class Client:
                     break
             print reply
             self.soc.send('LOGIN')
-            self.login()
-    def login(self):
-        username = raw_input("Enter username: ")
-        password = getpass.getpass("Enter password: ")
+    def login(self,username,password):
+        '''username = raw_input("Enter username: ")
+        password = getpass.getpass("Enter password: ")'''
         login_request = username + ";" + password
         self.soc.send(login_request)
         reply = self.soc.recv(BUFLEN).split(";")
@@ -38,21 +37,16 @@ class Client:
         else:
             print reply[1]
             if reply[0] == "0":
-                self.login()
+                return reply[1]
             if reply[0] == "2":
                 self.soc.close()
+                return 'CLOSE'
             if reply[0] == "1":
-                self.requests()
+                #self.requests()
+                return 'OK'
 
-    def directory(self):
-        self.target_dir = raw_input("Enter directory(press enter for default): ")
-        if not self.target_dir:
-            self.target_dir = DEFAULT_DIR
-        while not os.path.exists(self.target_dir):
-            self.target_dir = raw_input("Directory doesn't exist, please try again(press enter for default): ")
-            if not self.target_dir:
-                self.target_dir = DEFAULT_DIR
-        target_path = os.path.join(self.target_dir,"Reports")
+    def directory(self,path):
+        target_path = os.path.join(path,"Reports")
         if not os.path.exists(target_path):
             os.makedirs(target_path)
         self.target_dir = target_path
@@ -76,18 +70,21 @@ class Client:
         #add the other methods    
     
     def method_GET(self,date):
-        while len(date.split("-"))<3:
-            print "Wrong date syntax"
-            date = raw_input("Enter date(day-month-year): ")
+        if len(date.split("-"))<3:
+            print "Date syntax error"
+            return 'SYNTAX'
         self.soc.send('GET;' + date)
         report = self.soc.recv(BUFLEN)
-        if report == "NOT FOUND":
+        if report == 'NOT FOUND':
             print "Report from the date %s is missing"%date
+            return 'NOT FOUND'
         else:
             with open(os.path.join(self.target_dir,date),'w') as new_report:
                 new_report.write(report)
-            print "Wrote new report in %s for the date %s"% (self.target_dir,date)
-        self.requests()
+            info = "Wrote new report in %s for the date %s"% (self.target_dir,date)
+            print info
+            return info
+        #self.requests()
 
     def method_ADD(self,blacklist):
         exists = False
