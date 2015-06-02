@@ -3,7 +3,7 @@ from uuid import getnode as get_mac
 
 BUFLEN = 1024
 class Client:
-    def __init__(self,host="10.0.0.2",port=8081):
+    def __init__(self,host="10.20.30.114",port=8081):
         self.soc = socket.socket()
         self.soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         failed = False
@@ -49,7 +49,7 @@ class Client:
                 self.soc.close()
                 return 'SUCCESS'
 
-def start_connection(host="10.0.0.2",port=8081,timeout=3):
+'''def start_connection(host="10.0.0.2",port=8081,timeout=3):
     soc = socket.socket()
     soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     failed = False
@@ -67,7 +67,7 @@ def start_connection(host="10.0.0.2",port=8081,timeout=3):
                 break
         print reply
         soc.send('SIGNUP')
-        signup(soc)
+        signup(soc)'''
 
-if __name__ == '__main__':
-    c=Client()
+'''if __name__ == '__main__':
+    c=Client()'''

@@ -19,6 +19,7 @@ class GUI(Frame):
             self.parent = parent
             self.parent.title("SafeSurf")
             self.initStyle()
+            self.themes = self.style.theme_names()
             self.initUI()
         
     def initUI(self):
@@ -176,15 +177,17 @@ class GUI(Frame):
                 self.GET()
             else:
                 tkMessageBox.showinfo("Success",success)
+                self.input_entry.delete(0, 'end')
         elif method == 'EDIT':
             parameter = self.input.get()
             if self.method == 'ADD':
                 success = self.client.method_ADD(self.blacklist[0],self.subblacklist,parameter)
                 tkMessageBox.showinfo("Success",success)
+                self.input_entry.delete(0, 'end')
             elif self.method == 'REMOVE':
                 success = self.client.method_REMOVE(self.blacklist[0],self.subblacklist,parameter)
                 tkMessageBox.showinfo("Success",success)
-
+                self.input_entry.delete(0, 'end')
 
     def change_parameters(self,method):
         self.method = method
@@ -206,7 +209,7 @@ class GUI(Frame):
             self.client.directory(path)
             self.got_directory = True
         self.text_label['text'] = "Type the date of the report you wish to get(day-month-year)"
-        self.date_label.place(rely=0.4,relx=0.1,height=20)
+        self.date_label.place(rely=0.4,relx=0.09,height=20)
         self.input_entry.place(rely=0.39,relx=0.4957)
         self.input_entry.focus_set()
         self.date_button.place(rely=0.6,relx=0.35)
@@ -232,7 +235,7 @@ class GUI(Frame):
             self.text_label['text'] = "Type in the parameter you wish to add"
         elif self.method == 'REMOVE':
             self.text_label['text'] = "Type in the parameter you wish to remove"
-        self.parameter_label.place(rely=0.6,relx=0.2,height=20)
+        self.parameter_label.place(rely=0.6,relx=0.19,height=20)
         self.input_entry.place(rely=0.59,relx=0.3957)
         self.subblacklist = self.blacklist[self.option_subblacklist.get()]
         self.subblacklists_label['text'] = self.subblacklist
