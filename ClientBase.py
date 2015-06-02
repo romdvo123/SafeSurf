@@ -1,10 +1,10 @@
-import socket, getpass, time, os, select, time
+import socket, getpass, time, os, time, hashlib
 
 BUFLEN = 8192
 DEFAULT_DIR = os.getcwd()
 
 class Client:
-    def __init__(self,host="10.0.0.3",port=8081,timeout=3):
+    def __init__(self,host="10.0.0.2",port=8081):
         self.soc = socket.socket()
         self.soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         failed = False
@@ -27,8 +27,7 @@ class Client:
             print reply
             self.soc.send('LOGIN')
     def login(self,username,password):
-        '''username = raw_input("Enter username: ")
-        password = getpass.getpass("Enter password: ")'''
+        password = hashlib.sha224(password).hexdigest()
         login_request = username + ";" + password
         self.soc.send(login_request)
         reply = self.soc.recv(BUFLEN).split(";")
@@ -84,53 +83,22 @@ class Client:
             info = "Wrote new report in %s for the date %s"% (self.target_dir,date)
             print info
             return info
-        #self.requests()
 
-    def method_ADD(self,blacklist):
-        exists = False
-        while not exists:
-            for _blacklist in self.blacklists:
-                if _blacklist[0] == blacklist:
-                    exists = True
-                    bl =_blacklist[1:]
-                    break
-            if exists:
-                break
-            print "Wrong blacklist"
-            blacklist = raw_input("Enter blacklist%s: "%str([blacklist[0] for blacklist in self.blacklists]))
-        sub_blacklist = raw_input("Enter sub-blacklist%s: "%str([sub_bl for sub_bl in bl]))
-        while sub_blacklist not in bl:
-            print "Wrong sub-blacklist"
-            sub_blacklist = raw_input("Enter sub-blacklist%s: "%str([sub_bl for sub_bl in bl]))
-        ban = raw_input("Enter parameter to ban: ")
+    def method_ADD(self,blacklist,sub_blacklist,ban):
         self.soc.send('ADD;' + blacklist + ';' + sub_blacklist + ';' + ban)
         response = self.soc.recv(BUFLEN)
         if response == "SUCCESS":
-            print "Successfuly added %s to %s in blacklist %s"%(ban,sub_blacklist,blacklist)
-        self.requests()
+            info = "Successfuly added %s to %s in blacklist %s"%(ban,sub_blacklist,blacklist)
+            print info
+            return info
 
-    def method_REMOVE(self,blacklist):
-        exists = False
-        while not exists:
-            for _blacklist in self.blacklists:
-                if _blacklist[0] == blacklist:
-                    exists = True
-                    bl =_blacklist[1:]
-                    break
-            if exists:
-                break
-            print "Wrong blacklist"
-            blacklist = raw_input("Enter blacklist%s: "%str([blacklist[0] for blacklist in self.blacklists]))
-        sub_blacklist = raw_input("Enter sub-blacklist%s: "%str([sub_bl for sub_bl in bl]))
-        while sub_blacklist not in bl:
-            print "Wrong sub-blacklist"
-            sub_blacklist = raw_input("Enter sub-blacklist%s: "%str([sub_bl for sub_bl in bl]))
-        remove = raw_input("Enter parameter to remove: ")
+    def method_REMOVE(self,blacklist,sub_blacklist,remove):
         self.soc.send('REMOVE;' + blacklist + ';' + sub_blacklist + ';' + remove)
         response = self.soc.recv(BUFLEN)
         if response == "SUCCESS":
-            print "Successfuly removed %s from %s in blacklist %s"%(remove,sub_blacklist,blacklist)
-        self.requests()
+            info = "Successfuly removed %s from %s in blacklist %s"%(remove,sub_blacklist,blacklist)
+            print info
+            return info
             
 if __name__ == '__main__':
     c = Client()

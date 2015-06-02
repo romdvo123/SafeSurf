@@ -19,7 +19,6 @@ class GUI(Frame):
             self.parent = parent
             self.parent.title("SafeSurf")
             self.initStyle()
-            self.themes = self.style.theme_names()
             self.initUI()
         
     def initUI(self):

@@ -1,4 +1,4 @@
-import getpass, socket, select
+import getpass, socket, select, hashlib
 from uuid import getnode as get_mac
 
 BUFLEN = 1024
@@ -16,8 +16,9 @@ def signup(sock):
 
     password_repeat = getpass.getpass("Confirm password: ")
     while password != password_repeat:
-        print "Password doesn't match"
+        print "Passwords don't match"
         password_repeat = getpass.getpass("Confirm password: ")
+    password = hashlib.sha224(password).hexdigest()
     mac = get_mac()
     signup_request = username + ';' + password + ';' + str(mac)
     sock.send(signup_request)
@@ -31,7 +32,7 @@ def signup(sock):
         if reply[0] == '5' or reply[0] == '6':
             sock.close()
 
-def start_connection(host="10.20.30.112",port=8081,timeout=3):
+def start_connection(host="10.0.0.2",port=8081,timeout=3):
     soc = socket.socket()
     soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     failed = False
@@ -42,7 +43,6 @@ def start_connection(host="10.20.30.112",port=8081,timeout=3):
         failed = True
     if not failed:
         reply = ''
-        ready = select.select([soc], [], [], timeout)
         while 1:
             reply += soc.recv(BUFLEN)
             end = reply.find('OK')
