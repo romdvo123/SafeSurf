@@ -4,8 +4,9 @@ BUFLEN = 8192
 DEFAULT_DIR = os.getcwd()
 
 class Client:
-    def __init__(self,host="10.20.30.150",port=8081):
+    def __init__(self,host="10.0.0.2",port=8081):
         self.soc = socket.socket()
+        self.soc.settimeout(2)
         self.soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         failed = False
         try:
@@ -41,7 +42,6 @@ class Client:
                 self.soc.close()
                 return 'CLOSE'
             if reply[0] == "1":
-                #self.requests()
                 return 'OK'
 
     def directory(self,path):
@@ -50,23 +50,6 @@ class Client:
             os.makedirs(target_path)
         self.target_dir = target_path
         print "The reports will be saved in %s"%self.target_dir
-
-    def requests(self):
-        method_prompt = "Enter method:%s "%str(self.methods)
-        method = raw_input(method_prompt)
-        while method not in self.methods:
-            print "Wrong method"
-            method = raw_input(method_prompt)
-        if method == 'GET':
-            self.directory()
-            self.method_GET(raw_input("Enter date(day-month-year): "))
-        if method == 'ADD':
-            self.method_ADD(raw_input("Enter blacklist%s: "
-                                      %str([blacklist[0] for blacklist in self.blacklists])))
-        if method == 'REMOVE':
-            self.method_REMOVE(raw_input("Enter blacklist%s: "
-                                      %str([blacklist[0] for blacklist in self.blacklists])))
-        #add the other methods    
     
     def method_GET(self,date):
         if len(date.split("-"))<3:
@@ -100,5 +83,3 @@ class Client:
             print info
             return info
             
-if __name__ == '__main__':
-    c = Client()

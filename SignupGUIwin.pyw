@@ -109,7 +109,7 @@ def main():
     root = Tk()
     root.resizable(width=FALSE, height=FALSE)
     app = GUI(root,client)
-    root.mainloop()  
+    root.mainloop()
 
 if __name__ == '__main__':
     main()  
